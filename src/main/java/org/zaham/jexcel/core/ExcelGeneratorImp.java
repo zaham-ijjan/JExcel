@@ -1,36 +1,34 @@
 package org.zaham.jexcel.core;
 
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.zaham.jexcel.annotation.ExcelEntity;
 import org.zaham.jexcel.enums.ExcelType;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.zaham.jexcel.factory.WorkBookFactory;
+import org.zaham.jexcel.mapper.MapFileToEntity;
+import org.zaham.jexcel.mapper.MapFileToEntityImpl;
 
 import java.io.FileInputStream;
-import java.lang.reflect.Field;
+import java.io.FileOutputStream;
 import java.util.List;
-import java.util.Objects;
-
-import static org.zaham.jexcel.enums.ExcelType.XLSX;
 
 @Slf4j
 public class ExcelGeneratorImp implements ExcelGenerator{
 
-    @SneakyThrows
-    public <T> void writeEntity(String fileName, ExcelType excelType, List<T> entities){
-        try{
-            FileInputStream fileInputStream = new FileInputStream(fileName);
-            Workbook workbook = (excelType == XLSX) ? new XSSFWorkbook() : new HSSFWorkbook();
-            Sheet sheet = buildSheetName(workbook,entities);
-            int rowIndex = 0;
-            //entities.forEach(entity->{
-            //    Row row =
-            //});
+    private final MapFileToEntity mapFileToEntityImpl = new MapFileToEntityImpl();
 
+    public <T> void writeEntity(ExcelType excelType, List<T> entities){
+        log.info("starting generation of ExcelFile With Type: {}",excelType);
+        try{
+            String fileName = entities.get(0).getClass().getName();
+            FileInputStream fileInputStream = new FileInputStream(fileName);
+            Workbook workbook = WorkBookFactory.buildWorkBook(fileName,fileInputStream);
+            Sheet sheet = buildSheetName(workbook,entities);
+            mapFileToEntityImpl.mapEntityToFile(sheet,entities);
+            FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+            workbook.write(fileOutputStream);
+            fileOutputStream.close();
         }catch (Exception e){
             log.error("error",e);
         }
@@ -46,9 +44,5 @@ public class ExcelGeneratorImp implements ExcelGenerator{
             }
         }
         return workbook.createSheet();
-    }
-
-    public void scanEntity(){
-        Field[] fields =
     }
 }
