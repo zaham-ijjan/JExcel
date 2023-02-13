@@ -8,6 +8,7 @@ import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.zaham.jexcel.JExcelFactory;
 import org.zaham.jexcel.core.pojo.Employees;
 import org.zaham.jexcel.enums.ExcelType;
 
@@ -25,7 +26,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 class ExcelGeneratorImpTest {
 
-    private ExcelGenerator excelGenerator = new ExcelGeneratorImp();
 
     @Test
     void writeEntity() {
@@ -33,7 +33,7 @@ class ExcelGeneratorImpTest {
         String employees = getResourceFileAsString("excel/employees.json");
         Gson gson = new Gson();
         List<Employees> employeesList = Arrays.asList(gson.fromJson(employees,Employees[].class));
-        excelGenerator.writeEntity(ExcelType.XLSX,employeesList);
+        JExcelFactory.excelGenerator(employeesList,ExcelType.XLSX,true);
     }
 
     @SneakyThrows

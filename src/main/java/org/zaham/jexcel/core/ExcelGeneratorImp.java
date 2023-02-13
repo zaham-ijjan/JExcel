@@ -14,41 +14,49 @@ import java.io.FileOutputStream;
 import java.util.List;
 
 @Slf4j
-public class ExcelGeneratorImp implements ExcelGenerator {
+public class ExcelGeneratorImp<T> implements ExcelGenerator<T>{
 
-    private final MapFileToEntity mapFileToEntityImpl = new MapFileToEntityImpl();
-
-    private boolean firstRowHeader = true;
-
-    public ExcelGeneratorImp() {
+    private final Class<T> clazz;
+    private final ExcelType excelType;
+    private final MapFileToEntity<T> mapFileToEntity;
+    private final Workbook workbook;
+    private  boolean firstRowHeader = true;
+    public ExcelGeneratorImp(ExcelType excelType, Class<T> type) {
+        this.clazz = type;
+        this.excelType = excelType;
+        this.workbook = WorkBookFactory.buildWorkBook(excelType,null);
+        this.mapFileToEntity = new MapFileToEntityImpl<>(false,type);
     }
 
-    public ExcelGeneratorImp(boolean firstRowHeader) {
-        firstRowHeader = firstRowHeader;
+    public ExcelGeneratorImp(ExcelType excelType, Class<T> type,boolean firstRowHeader) {
+        this.clazz = type;
+        this.excelType = excelType;
+        this.workbook = WorkBookFactory.buildWorkBook(excelType,null);
+        this.mapFileToEntity = new MapFileToEntityImpl<>(firstRowHeader,type);
+        this.firstRowHeader = firstRowHeader;
     }
 
-    @SneakyThrows
-    public <T> void writeEntity(ExcelType excelType, List<T> entities) {
-        log.info("starting generation of ExcelFile With Type: {}", excelType);
-        String fileName = entities.get(0).getClass().getSimpleName() + "." + excelType.getType();
-        Workbook workbook = WorkBookFactory.buildWorkBook(excelType, null);
-        Sheet sheet = buildSheetName(workbook, entities);
-        mapFileToEntityImpl.mapEntityToFile(sheet, entities,firstRowHeader);
-        FileOutputStream fileOutputStream = new FileOutputStream(fileName);
-        workbook.write(fileOutputStream);
-        fileOutputStream.close();
-    }
-
-    public <T> Sheet buildSheetName(Workbook workbook, List<T> entities) {
+    @Override
+    public  Sheet initSheetName(List<T> entities) {
         if (entities != null && !entities.isEmpty()) {
-            T entity = entities.get(0);
-            String defaultSheetName = entity.getClass().getSimpleName();
-            Class<?> type = entity.getClass();
-            if (type.isAnnotationPresent(ExcelEntity.class)) {
-                ExcelEntity excelEntity = type.getAnnotation(ExcelEntity.class);
+            String defaultSheetName = clazz.getSimpleName();
+            if (clazz.isAnnotationPresent(ExcelEntity.class)) {
+                ExcelEntity excelEntity = clazz.getAnnotation(ExcelEntity.class);
                 return !excelEntity.sheetName().equals("") ? workbook.createSheet(excelEntity.sheetName()) : workbook.createSheet(defaultSheetName);
             }
         }
         return workbook.createSheet();
+    }
+
+    @SneakyThrows
+    @Override
+    public  void writeEntity(List<T> entities) {
+        log.info("starting generation of ExcelFile With Type: {}", excelType);
+        String fileName = clazz.getSimpleName() + "." + excelType.getType();
+        Sheet sheet = initSheetName(entities);
+        mapFileToEntity.mapEntityToFile(sheet, entities,firstRowHeader);
+        FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+        workbook.write(fileOutputStream);
+        fileOutputStream.close();
     }
 }

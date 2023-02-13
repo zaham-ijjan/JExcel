@@ -4,7 +4,6 @@ import lombok.SneakyThrows;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
 import org.zaham.jexcel.factory.CellsFactory;
 
 import java.lang.reflect.Field;
@@ -13,20 +12,33 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
-public class MapFileToEntityImpl implements MapFileToEntity {
+public class MapFileToEntityImpl<T> implements MapFileToEntity<T> {
 
-    @SneakyThrows
-    @SuppressWarnings("java:S3011")
-    @Override
-    public <T> void mapEntityToFile(Sheet sheet,List<T> entities,boolean firstRowHeader){
-        AtomicInteger rowIndex = new AtomicInteger();
-        AtomicBoolean setColumnName = new AtomicBoolean(firstRowHeader);
-        AtomicReference<Row> row = new AtomicReference<>(sheet.createRow(rowIndex.getAndIncrement()));
-        T e = entities.get(0);
-        Field[] declaredFields = e.getClass().getDeclaredFields();
-        if(setColumnName.get()){
+    private Field[] declaredFields ;
+    private AtomicInteger rowIndex ;
+    private AtomicBoolean enableColumnName ;
+    private AtomicReference<Row> row;
+    private Sheet sheet;
+
+    public MapFileToEntityImpl(boolean enableColumnName ,Class<T> type) {
+        this.declaredFields = type.getDeclaredFields();
+        this.enableColumnName = new AtomicBoolean(enableColumnName);
+    }
+
+    BiFunction<List<T>,Sheet,List<T>> initSheet = (ts, sht) -> {
+        this.rowIndex = new AtomicInteger();
+        this.sheet = sht;
+        this.row = new AtomicReference<>(sheet.createRow(rowIndex.getAndIncrement()));
+        return ts;
+    };
+
+    UnaryOperator<List<T>> buldColmunNames = ts -> {
+        if(enableColumnName.get()){
             AtomicInteger columnCells = new AtomicInteger();
             generateExcelHeader(declaredFields)
                     .forEach(s -> {
@@ -34,22 +46,16 @@ public class MapFileToEntityImpl implements MapFileToEntity {
                         CellsFactory.setCellFactry(cell,s);
                         columnCells.getAndIncrement();
                     });
-            setColumnName.set(false);
-            //rowIndex.getAndIncrement();
+            enableColumnName.set(false);
         }
-        entities.forEach( entity ->{
+        return ts;
+    };
+
+    @SuppressWarnings("java:S3011")
+    Function<List<T>,Void> writeInExcelFile = ts -> {
+        ts.forEach( entity ->{
             row.set(sheet.createRow(rowIndex.getAndIncrement()));
             AtomicInteger numberOfCells = new AtomicInteger();
-            if(setColumnName.get()){
-                generateExcelHeader(declaredFields)
-                        .forEach(s -> {
-                            Cell cell = row.get().createCell(numberOfCells.get());
-                            CellsFactory.setCellFactry(cell,s);
-                            numberOfCells.getAndIncrement();
-                        });
-                setColumnName.set(false);
-                sheet.createRow(rowIndex.getAndIncrement());
-            }
             Arrays.stream(declaredFields)
                     .forEach(field -> {
                         field.setAccessible(true);
@@ -63,24 +69,17 @@ public class MapFileToEntityImpl implements MapFileToEntity {
                         }
                     });
         });
-    }
+        return null;
+    } ;
 
+    @SneakyThrows
     @Override
-    public <T> List<T> map(Workbook workbook, Class<T> clazz) {
-        int numberSheet = workbook.getNumberOfSheets();
-        for (int i = 0; i < numberSheet; i++) {
-            Sheet sheet = workbook.getSheetAt(i);
-            sheet.rowIterator()
-                    .forEachRemaining(row -> {
-                        row.cellIterator()
-                                .forEachRemaining(cell -> {
-                                    System.out.println("this is cell value :::" + cell.getStringCellValue());
-                                });
-                    });
-        }
-        throw new UnsupportedOperationException("method not implemented yet");
+    public void mapEntityToFile(Sheet sheet,List<T> entities,boolean firstRowHeader){
+        initSheet.andThen(buldColmunNames)
+                .andThen(writeInExcelFile)
+                .apply(entities,sheet);
     }
-    public <T> List<String> generateExcelHeader(Field[] fields){
+    public List<String> generateExcelHeader(Field[] fields){
          return Arrays.stream(fields)
                 .map(Field::getName)
                 .collect(Collectors.toList());
