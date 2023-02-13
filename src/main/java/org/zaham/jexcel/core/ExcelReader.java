@@ -17,7 +17,9 @@ public class ExcelReader {
     public <T> List<T> readExcel(String path, Class<T> clazz){
         String fileName = Paths.get(path).getFileName().toString();
         FileInputStream fileInputStream = new FileInputStream(fileName);
-        Workbook workbook = WorkBookFactory.buildWorkBook(fileName , fileInputStream);
-        return mapFileToEntityImpl.map(workbook,clazz);
+        //TODO adapt reading the factory for workbook
+        //Workbook workbook = WorkBookFactory.buildWorkBook(fileName , fileInputStream);
+//        return mapFileToEntityImpl.map(workbook,clazz);
+        throw new UnsupportedOperationException("still in progress");
     }
 }

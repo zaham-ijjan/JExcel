@@ -23,7 +23,7 @@ public class MapFileToEntityImpl implements MapFileToEntity {
     @SneakyThrows
     @SuppressWarnings("java:S3011")
     @Override
-    public <T> void mapEntityToFile(Sheet sheet,List<T> entities){
+    public <T> void mapEntityToFile(Sheet sheet,List<T> entities,boolean firstRowHeader){
         AtomicInteger rowIndex = new AtomicInteger();
         entities.forEach( entity ->{
             Row row = sheet.createRow(rowIndex.getAndIncrement());

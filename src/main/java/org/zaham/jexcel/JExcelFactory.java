@@ -9,4 +9,8 @@ public final class JExcelFactory {
     public static ExcelGenerator excelGenerator(){
         return new ExcelGeneratorImp();
     }
+
+    public static ExcelGenerator excelGenerator(boolean firstRowHeader){
+        return new ExcelGeneratorImp(firstRowHeader);
+    }
 }

@@ -6,6 +6,6 @@ import org.apache.poi.ss.usermodel.Workbook;
 import java.util.List;
 
 public interface MapFileToEntity {
-    <T> void mapEntityToFile(Sheet sheet, List<T> entities);
+    <T> void mapEntityToFile(Sheet sheet, List<T> entities,boolean firstRowHeader);
     <T> List<T> map(Workbook workbook, Class<T> clazz);
 }
