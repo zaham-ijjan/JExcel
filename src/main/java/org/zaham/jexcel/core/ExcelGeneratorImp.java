@@ -10,7 +10,9 @@ import org.zaham.jexcel.factory.WorkBookFactory;
 import org.zaham.jexcel.mapper.MapFileToEntity;
 import org.zaham.jexcel.mapper.MapFileToEntityImpl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.List;
 
 @Slf4j
@@ -20,7 +22,7 @@ public class ExcelGeneratorImp<T> implements ExcelGenerator<T>{
     private final ExcelType excelType;
     private final MapFileToEntity<T> mapFileToEntity;
     private final Workbook workbook;
-    private  boolean firstRowHeader = true;
+    private  boolean enableColumn = true;
     public ExcelGeneratorImp(ExcelType excelType, Class<T> type) {
         this.clazz = type;
         this.excelType = excelType;
@@ -28,12 +30,12 @@ public class ExcelGeneratorImp<T> implements ExcelGenerator<T>{
         this.mapFileToEntity = new MapFileToEntityImpl<>(false,type);
     }
 
-    public ExcelGeneratorImp(ExcelType excelType, Class<T> type,boolean firstRowHeader) {
+    public ExcelGeneratorImp(ExcelType excelType, Class<T> type,boolean enableColumn) {
         this.clazz = type;
         this.excelType = excelType;
         this.workbook = WorkBookFactory.buildWorkBook(excelType,null);
-        this.mapFileToEntity = new MapFileToEntityImpl<>(firstRowHeader,type);
-        this.firstRowHeader = firstRowHeader;
+        this.mapFileToEntity = new MapFileToEntityImpl<>(enableColumn,type);
+        this.enableColumn = enableColumn;
     }
 
     @Override
@@ -50,13 +52,25 @@ public class ExcelGeneratorImp<T> implements ExcelGenerator<T>{
 
     @SneakyThrows
     @Override
-    public  void writeEntity(List<T> entities) {
+    public void writeEntityToFile(List<T> entities, String path) {
+        log.info("starting generation of ExcelFile With Type: {}", excelType);
+        String fileName = path + clazz.getSimpleName() + "." + excelType.getType();
+        Sheet sheet = initSheetName(entities);
+        mapFileToEntity.mapEntityToFile(sheet, entities, enableColumn);
+        OutputStream fileOutputStream = new FileOutputStream(fileName);
+        workbook.write(fileOutputStream);
+        fileOutputStream.close();
+    }
+
+    @Override
+    @SneakyThrows
+    public byte[] writeEntityToByteArray(List<T> entities) {
         log.info("starting generation of ExcelFile With Type: {}", excelType);
         String fileName = clazz.getSimpleName() + "." + excelType.getType();
         Sheet sheet = initSheetName(entities);
-        mapFileToEntity.mapEntityToFile(sheet, entities,firstRowHeader);
-        FileOutputStream fileOutputStream = new FileOutputStream(fileName);
-        workbook.write(fileOutputStream);
-        fileOutputStream.close();
+        mapFileToEntity.mapEntityToFile(sheet, entities, enableColumn);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        workbook.write(byteArrayOutputStream);
+        return byteArrayOutputStream.toByteArray();
     }
 }

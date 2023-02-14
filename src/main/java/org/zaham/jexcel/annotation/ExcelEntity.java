@@ -8,6 +8,5 @@ import java.lang.annotation.Target;
 @Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ExcelEntity {
-    public String sheetName() default "";
-    public String tableHeader() default "";
+    String sheetName() default "";
 }
