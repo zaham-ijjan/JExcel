@@ -5,42 +5,72 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.zaham.jexcel.annotation.ExcelEntity;
+import org.zaham.jexcel.annotation.inject.Autowired;
+import org.zaham.jexcel.annotation.inject.Component;
 import org.zaham.jexcel.enums.ExcelType;
 import org.zaham.jexcel.factory.WorkBookFactory;
-import org.zaham.jexcel.mapper.MapFileToEntity;
-import org.zaham.jexcel.mapper.MapFileToEntityImpl;
+import org.zaham.jexcel.functional.FourthFunction;
+import org.zaham.jexcel.mapper.MapEntityToFile;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.List;
+import java.util.function.Function;
 
+@Component
 @Slf4j
 public class ExcelGeneratorImp<T> implements ExcelGenerator<T>{
 
-    private final Class<T> clazz;
-    private final ExcelType excelType;
-    private final MapFileToEntity<T> mapFileToEntity;
-    private final Workbook workbook;
-    private  boolean enableColumn = true;
-    public ExcelGeneratorImp(ExcelType excelType, Class<T> type) {
-        this.clazz = type;
-        this.excelType = excelType;
-        this.workbook = WorkBookFactory.buildWorkBook(excelType,null);
-        this.mapFileToEntity = new MapFileToEntityImpl<>(false,type);
-    }
+    @Autowired
+    private MapEntityToFile<T> mapEntityToFile;
+    private Class<T> clazz ;
+    private ExcelType excelType;
+    private String path ;
+    private  Workbook workbook;
+    private Sheet sheet;
+    private boolean enableColumn = true;
 
-    public ExcelGeneratorImp(ExcelType excelType, Class<T> type,boolean enableColumn) {
-        this.clazz = type;
-        this.excelType = excelType;
+    FourthFunction<List<T>, String,Boolean, ExcelType,List<T>> initSheet = (ts, path, enable,type) -> {
+        this.clazz =(Class<T>) ts.get(0).getClass();
+        this.enableColumn = enable;
+        this.excelType = type;
         this.workbook = WorkBookFactory.buildWorkBook(excelType,null);
-        this.mapFileToEntity = new MapFileToEntityImpl<>(enableColumn,type);
-        this.enableColumn = enableColumn;
-    }
+        this.path = path;
+        return ts;
+    };
+
+    Function<List<T>,List<T>> initSheetName = entities ->{
+        if (entities != null && !entities.isEmpty()) {
+            String defaultSheetName = clazz.getSimpleName();
+            if (clazz.isAnnotationPresent(ExcelEntity.class)) {
+                ExcelEntity excelEntity = clazz.getAnnotation(ExcelEntity.class);
+                sheet = !excelEntity.sheetName().equals("") ? workbook.createSheet(excelEntity.sheetName()) : workbook.createSheet(defaultSheetName);
+            }
+        }
+        sheet = workbook.createSheet();
+        return entities;
+    };
+
+
+    Function<List<T>,Void> writeEntityToFile =  entities -> {
+        String fileName = path + clazz.getSimpleName() + "." + excelType.getType();
+        mapEntityToFile.mapEntityToFile(sheet, entities, enableColumn);
+        OutputStream fileOutputStream = null;
+        try {
+            fileOutputStream = new FileOutputStream(fileName);
+            workbook.write(fileOutputStream);
+            fileOutputStream.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    };
+
+
 
     @Override
-    public  Sheet initSheetName(List<T> entities) {
+    public  Sheet initSheetName(List<T> entities, Workbook workbook) {
         if (entities != null && !entities.isEmpty()) {
+            Class<T> clazz = (Class<T>) entities.get(0).getClass();
             String defaultSheetName = clazz.getSimpleName();
             if (clazz.isAnnotationPresent(ExcelEntity.class)) {
                 ExcelEntity excelEntity = clazz.getAnnotation(ExcelEntity.class);
@@ -52,25 +82,32 @@ public class ExcelGeneratorImp<T> implements ExcelGenerator<T>{
 
     @SneakyThrows
     @Override
-    public void writeEntityToFile(List<T> entities, String path) {
+    public void writeEntityToFile(List<T> entities, String path, boolean enable, ExcelType excelType) {
         log.info("starting generation of ExcelFile With Type: {}", excelType);
-        String fileName = path + clazz.getSimpleName() + "." + excelType.getType();
-        Sheet sheet = initSheetName(entities);
-        mapFileToEntity.mapEntityToFile(sheet, entities, enableColumn);
-        OutputStream fileOutputStream = new FileOutputStream(fileName);
-        workbook.write(fileOutputStream);
-        fileOutputStream.close();
+       // Class<T> clazz = (Class<T>) entities.get(0).getClass();
+       // String fileName = path + clazz.getSimpleName() + "." + excelType.getType();
+       // Sheet sheet = initSheetName(entities);
+       // mapEntityToFile.mapEntityToFile(sheet, entities, enableColumn);
+       // OutputStream fileOutputStream = new FileOutputStream(fileName);
+       // workbook.write(fileOutputStream);
+       // fileOutputStream.close();
+        initSheet
+                .andThen(initSheetName)
+                .andThen(writeEntityToFile)
+                .apply(entities,path,enable,excelType)
+
     }
 
     @Override
     @SneakyThrows
-    public byte[] writeEntityToByteArray(List<T> entities) {
+    public OutputStream writeEntityToByteArray(List<T> entities, ExcelType excelType) {
         log.info("starting generation of ExcelFile With Type: {}", excelType);
+        Class<T> clazz = (Class<T>) entities.get(0).getClass();
         String fileName = clazz.getSimpleName() + "." + excelType.getType();
         Sheet sheet = initSheetName(entities);
-        mapFileToEntity.mapEntityToFile(sheet, entities, enableColumn);
+        mapEntityToFile.mapEntityToFile(sheet, entities, enableColumn);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         workbook.write(byteArrayOutputStream);
-        return byteArrayOutputStream.toByteArray();
+        return byteArrayOutputStream;
     }
 }
