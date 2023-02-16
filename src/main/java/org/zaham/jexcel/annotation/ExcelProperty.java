@@ -1,12 +1,13 @@
 package org.zaham.jexcel.annotation;
 
+
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
-@Target({ ElementType.TYPE })
+@Target({ ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ExcelEntity {
-    String sheetName() default "";
+public @interface ExcelProperty {
+	 String excelProperty() default "";
 }

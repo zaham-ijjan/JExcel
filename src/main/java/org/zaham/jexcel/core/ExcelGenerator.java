@@ -1,12 +1,17 @@
 package org.zaham.jexcel.core;
 
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import lombok.SneakyThrows;
 import org.zaham.jexcel.enums.ExcelType;
 
+import java.io.File;
+import java.io.OutputStream;
 import java.util.List;
 
-public interface ExcelGenerator {
-    <T> void writeEntity(ExcelType excelType, List<T> entities);
-    <T> Sheet buildSheetName(Workbook workbook , List<T> entities);
+public interface ExcelGenerator<T> {
+
+     @SneakyThrows
+     File writeEntityToFile(List<T> entities, ExcelType excelType, String path, boolean enable);
+
+     @SneakyThrows
+     OutputStream writeEntityToByteArray(List<T> entities, ExcelType excelType,boolean enable);
 }
