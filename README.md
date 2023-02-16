@@ -3,8 +3,8 @@ a Java tiny library that generate an Excel File based on a Pojo Using Apache POI
 
 ## Usage
 
-1. Get the jar. (Download JAR | Github Release | Maven Repo)
-2. Add this as a dependency in your project.
+1. Get the jar. (Download JAR | Github Release)
+2. Add this as a dependency in your project.( maven repo will be availabe as soon as possible)
 3. Use it as below.
 
 Let's suppose that you have a list of objects that you want to write them on some excel File
