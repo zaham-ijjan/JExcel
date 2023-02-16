@@ -16,14 +16,14 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public final class JExcelFactory<T> {
+public final class JExcel<T> {
 
     private static final String NULL_ERROR_LOG = "error the list object provided is null";
     private static final String EMPTY_WARN_LOG = "the list object provided is empty Nothing to be generated";
 
     private final ExcelGenerator<T> excelGenerator;
 
-    public JExcelFactory() {
+    public JExcel() {
         MapEntityToFile<T> mapEntityToFile = new MapEntityToFileImpl<>();
         excelGenerator = new ExcelGeneratorImp<>(mapEntityToFile);
     }
@@ -44,7 +44,7 @@ public final class JExcelFactory<T> {
     }
 
     @SneakyThrows
-    public Optional<OutputStream> excelByteArrayGenerator(List<T> entities, ExcelType excelType, boolean enableColumName, @NonNull String path) {
+    public Optional<OutputStream> excelByteArrayGenerator(List<T> entities, ExcelType excelType, boolean enableColumName ){
         if (entities == null) {
             throw new ExcelGeneratorException(NULL_ERROR_LOG);
         } else if (entities.isEmpty()) {

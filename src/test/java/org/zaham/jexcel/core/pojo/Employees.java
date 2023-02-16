@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.zaham.jexcel.annotation.ExcelEntity;
 import org.zaham.jexcel.annotation.ExcelIgnore;
+import org.zaham.jexcel.annotation.ExcelProperty;
 
 import java.util.Date;
 
@@ -19,6 +20,7 @@ public class Employees{
     private String last_name;
     private String first_name;
     private String title;
+    @ExcelProperty(excelProperty = "courtesy")
     private String title_of_courtesy;
     private Date birth_date;
     private Date hire_date;

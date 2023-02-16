@@ -33,6 +33,7 @@ public class ExcelGeneratorImp<T> implements ExcelGenerator<T>{
     private Sheet sheet;
     private boolean enableColumn = true;
 
+    @SuppressWarnings("java:S1117")
     FourthFunction<List<T>, String,Boolean, ExcelType,List<T>> initSheet = (ts, path, enable,type) -> {
         this.clazz =(Class<T>) ts.get(0).getClass();
         this.enableColumn = enable;
@@ -62,6 +63,7 @@ public class ExcelGeneratorImp<T> implements ExcelGenerator<T>{
         fileOutputStream = new FileOutputStream(file);
         workbook.write(fileOutputStream);
         fileOutputStream.close();
+        log.info("generation of the file done: {}", excelType);
         return file;
     };
 
@@ -69,6 +71,7 @@ public class ExcelGeneratorImp<T> implements ExcelGenerator<T>{
         mapEntityToFile.mapEntityToFile(sheet, entities, enableColumn);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         workbook.write(byteArrayOutputStream);
+        log.info("generation of the output stream done: {}", excelType);
         return byteArrayOutputStream;
     };
 
@@ -88,7 +91,7 @@ public class ExcelGeneratorImp<T> implements ExcelGenerator<T>{
     @Override
     @SneakyThrows
     public OutputStream writeEntityToByteArray(List<T> entities, ExcelType excelType, boolean enable ) {
-        log.info("starting generation of ExcelFile With Type: {}", excelType);
+        log.info("starting generation of output stream With Type: {}", excelType);
         return initSheet
                 .andThen(initSheetName)
                 .andThen(writeEntityToOuputStream)
