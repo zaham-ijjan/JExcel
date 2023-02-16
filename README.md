@@ -7,6 +7,13 @@ a Java tiny library that generate an Excel File based on a Pojo Using Apache POI
 2. Add this as a dependency in your project.( maven repo will be availabe as soon as possible)
 3. Use it as below.
 
+``` xml
+<dependency>
+  <groupId>org.example</groupId>
+  <artifactId>jexcel</artifactId>
+  <version>1.0-SNAPSHOT</version>
+</dependency>
+``` 
 Let's suppose that you have a list of objects that you want to write them on some excel File
 
 ``` Java
@@ -19,7 +26,7 @@ String path = "..." //path  that you want to generate your file
 boolean column = true ; // if you want to display the field names of your object in the first Name
 JExcel<Employees> jExcel = new JExcel<>(); 
 Optional<File> fileOptional = jExcel.excelFileGenerator(employeesList,excelType,enableColumn,path); // Option 1
-Optional<OutputStream> outpuStreamOptional  = jExcel.excelByteArrayGenerator(employeesList,excelType,enableColumn,path) // Option 2
+Optional<OutputStream> outpuStreamOptional  = jExcel.excelByteArrayGenerator(employeesList,excelType,enableColumn) // Option 2 without path
 
  ```
 
