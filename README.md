@@ -4,7 +4,7 @@ a Java tiny library that generate an Excel File based on a Pojo Using Apache POI
 ## Usage
 
 1. Get the jar. (Download JAR | Github Release)
-2. Add this as a dependency in your project.( maven repo will be availabe as soon as possible)
+2. Add this as a dependency in your project
 3. Use it as below.
 
 ``` xml
