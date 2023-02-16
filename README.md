@@ -9,7 +9,7 @@ a Java tiny library that generate an Excel File based on a Pojo Using Apache POI
 
 ``` xml
 <dependency>
-  <groupId>org.example</groupId>
+  <groupId>org.zaham</groupId>
   <artifactId>jexcel</artifactId>
   <version>1.0-SNAPSHOT</version>
 </dependency>
