@@ -1,5 +1,6 @@
 package org.zaham.jexcel.core;
 
+import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -15,9 +16,11 @@ import org.zaham.jexcel.mapper.MapEntityToFile;
 import java.io.*;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 @Component
 @Slf4j
+@Setter
 public class ExcelGeneratorImp<T> implements ExcelGenerator<T>{
 
     @Autowired
@@ -38,7 +41,7 @@ public class ExcelGeneratorImp<T> implements ExcelGenerator<T>{
         return ts;
     };
 
-    Function<List<T>,List<T>> initSheetName = entities ->{
+    UnaryOperator<List<T>> initSheetName = entities ->{
         if (entities != null && !entities.isEmpty()) {
             String defaultSheetName = clazz.getSimpleName();
             if (clazz.isAnnotationPresent(ExcelEntity.class)) {
@@ -46,7 +49,6 @@ public class ExcelGeneratorImp<T> implements ExcelGenerator<T>{
                 sheet = !excelEntity.sheetName().equals("") ? workbook.createSheet(excelEntity.sheetName()) : workbook.createSheet(defaultSheetName);
             }
         }
-        sheet = workbook.createSheet();
         return entities;
     };
 
@@ -65,49 +67,38 @@ public class ExcelGeneratorImp<T> implements ExcelGenerator<T>{
         return null;
     };
 
-
-
-    @Override
-    public  Sheet initSheetName(List<T> entities, Workbook workbook) {
-        if (entities != null && !entities.isEmpty()) {
-            Class<T> clazz = (Class<T>) entities.get(0).getClass();
-            String defaultSheetName = clazz.getSimpleName();
-            if (clazz.isAnnotationPresent(ExcelEntity.class)) {
-                ExcelEntity excelEntity = clazz.getAnnotation(ExcelEntity.class);
-                return !excelEntity.sheetName().equals("") ? workbook.createSheet(excelEntity.sheetName()) : workbook.createSheet(defaultSheetName);
-            }
+    Function<List<T>,ByteArrayOutputStream> writeEntityToOuputStream = entities ->{
+        mapEntityToFile.mapEntityToFile(sheet, entities, enableColumn);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        try {
+            workbook.write(byteArrayOutputStream);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        return workbook.createSheet();
-    }
+        return byteArrayOutputStream;
+    };
+
+
 
     @SneakyThrows
     @Override
-    public void writeEntityToFile(List<T> entities, String path, boolean enable, ExcelType excelType) {
+    public void writeEntityToFile(List<T> entities,ExcelType excelType, String path, boolean enable ) {
         log.info("starting generation of ExcelFile With Type: {}", excelType);
-       // Class<T> clazz = (Class<T>) entities.get(0).getClass();
-       // String fileName = path + clazz.getSimpleName() + "." + excelType.getType();
-       // Sheet sheet = initSheetName(entities);
-       // mapEntityToFile.mapEntityToFile(sheet, entities, enableColumn);
-       // OutputStream fileOutputStream = new FileOutputStream(fileName);
-       // workbook.write(fileOutputStream);
-       // fileOutputStream.close();
         initSheet
                 .andThen(initSheetName)
                 .andThen(writeEntityToFile)
-                .apply(entities,path,enable,excelType)
+                .apply(entities,path,enable,excelType);
 
     }
 
     @Override
     @SneakyThrows
-    public OutputStream writeEntityToByteArray(List<T> entities, ExcelType excelType) {
+    public OutputStream writeEntityToByteArray(List<T> entities, ExcelType excelType, boolean enable ) {
         log.info("starting generation of ExcelFile With Type: {}", excelType);
-        Class<T> clazz = (Class<T>) entities.get(0).getClass();
-        String fileName = clazz.getSimpleName() + "." + excelType.getType();
-        Sheet sheet = initSheetName(entities);
-        mapEntityToFile.mapEntityToFile(sheet, entities, enableColumn);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        workbook.write(byteArrayOutputStream);
-        return byteArrayOutputStream;
+        initSheet
+                .andThen(initSheetName)
+                .andThen(writeEntityToOuputStream)
+                .apply(entities,path,enable,excelType);
+        return null;
     }
 }

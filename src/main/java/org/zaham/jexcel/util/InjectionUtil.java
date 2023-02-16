@@ -1,12 +1,15 @@
 package org.zaham.jexcel.util;
 
+
+
+import java.util.*;
+
 import org.burningwave.core.classes.FieldCriteria;
 import org.zaham.jexcel.annotation.inject.Autowired;
 import org.zaham.jexcel.annotation.inject.Qualifier;
 import org.zaham.jexcel.injectors.Injector;
 
 import java.lang.reflect.Field;
-import java.util.Collection;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 
@@ -17,7 +20,7 @@ public class InjectionUtil {
     public static void autowire(Injector injector, Class<?> classz, Object classInstance)
             throws InstantiationException, IllegalAccessException {
         Collection<Field> fields = Fields.findAllAndMakeThemAccessible(
-                FieldCriteria.forEntireClassHierarchy().allThat(field ->
+                FieldCriteria.forEntireClassHierarchy().allThoseThatMatch(field ->
                         field.isAnnotationPresent(Autowired.class)
                 ),
                 classz
