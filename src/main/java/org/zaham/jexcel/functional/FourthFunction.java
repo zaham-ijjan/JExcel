@@ -1,12 +1,10 @@
 package org.zaham.jexcel.functional;
 
+import java.io.IOException;
 import java.util.Objects;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
 @FunctionalInterface
 public interface FourthFunction<A, B, C, D, R> {
-    R apply(A t, B u, C v, D w);
+    R apply(A t, B u, C v, D w) throws IllegalAccessException, IOException;
 
     default <V> FourthFunction<A, B, C,D,V> andThen(Function<? super R, ? extends V> after) {
         Objects.requireNonNull(after);

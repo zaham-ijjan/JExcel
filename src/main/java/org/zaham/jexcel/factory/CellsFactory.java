@@ -1,6 +1,5 @@
 package org.zaham.jexcel.factory;
 
-import lombok.Data;
 import lombok.experimental.UtilityClass;
 import org.apache.poi.ss.usermodel.Cell;
 

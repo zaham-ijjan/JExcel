@@ -2,6 +2,9 @@ package org.zaham.jexcel.core;
 
 import com.google.gson.Gson;
 import lombok.SneakyThrows;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,11 +36,34 @@ class ExcelGeneratorImpTest {
     @BeforeEach
     void setUp() {
         mapEntityToFile = mock(MapEntityToFileImpl.class);
-        excelGenerator.setMapEntityToFile(mapEntityToFile);
+        excelGenerator = new ExcelGeneratorImp<>(mapEntityToFile);
     }
 
     @Test
+    @SneakyThrows
     void writeEntityToFile() {
+        //given
+        String employees = getResourceFileAsString();
+        Gson gson = new Gson();
+        List<Employees> employeesList = Arrays.asList(gson.fromJson(employees,Employees[].class));
+        String path = "";
+        ExcelType excelType = ExcelType.XLSX;
+        boolean enableColumn = true;
+        XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
+        Sheet sheet =  xssfWorkbook.createSheet();
+
+        //when
+        doNothing().when(mapEntityToFile).mapEntityToFile(any(),eq(employeesList) ,eq(enableColumn));
+        excelGenerator.writeEntityToFile(employeesList,excelType,path,enableColumn);
+
+        //then
+        verify(mapEntityToFile,times(1)).mapEntityToFile(any(),eq(employeesList) ,eq(enableColumn));
+
+    }
+
+    @Test
+    @SneakyThrows
+    void writeEntityToByteArray() {
         //given
         String employees = getResourceFileAsString();
         Gson gson = new Gson();
@@ -47,16 +73,11 @@ class ExcelGeneratorImpTest {
         boolean enableColumn = true;
 
         //when
-        doNothing().when(mapEntityToFile).mapEntityToFile(any(),any(),any());
-        excelGenerator.writeEntityToFile(employeesList,excelType,path,enableColumn);
+        doNothing().when(mapEntityToFile).mapEntityToFile(any(),eq(employeesList) ,eq(enableColumn));
+        excelGenerator.writeEntityToByteArray(employeesList,excelType,enableColumn);
 
         //then
-        verify(mapEntityToFile,times(1)).mapEntityToFile(any(),any(),any());
-
-    }
-
-    @Test
-    void writeEntityToByteArray() {
+        verify(mapEntityToFile,times(1)).mapEntityToFile(any(),eq(employeesList) ,eq(enableColumn));
     }
 
     @SneakyThrows

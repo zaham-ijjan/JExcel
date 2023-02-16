@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.zaham.jexcel.annotation.ExcelEntity;
+import org.zaham.jexcel.annotation.ExcelIgnore;
 
 import java.util.Date;
 
@@ -28,5 +29,6 @@ public class Employees{
     private String country;
     private String home_phone;
     private String extension;
+    @ExcelIgnore
     private String photo_path;
 }
