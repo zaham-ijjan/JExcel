@@ -11,7 +11,7 @@ a Java tiny library that generate an Excel File based on a Pojo Using Apache POI
 <dependency>
   <groupId>org.zaham</groupId>
   <artifactId>jexcel</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0-2</version>
 </dependency>
 ``` 
 Let's suppose that you have a list of objects that you want to write them on some excel File
