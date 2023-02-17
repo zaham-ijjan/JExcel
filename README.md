@@ -1,4 +1,4 @@
-# JExcel Library
+# JExcel Library based on apache poi excel writer
 a Java tiny library that generate an Excel File based on a Pojo Using Apache POI
 
 ## Usage
